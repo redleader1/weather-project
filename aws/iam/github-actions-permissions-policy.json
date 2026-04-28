@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LambdaDeploy",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunctionConfiguration"
+      ],
+      "Resource": [
+        "arn:aws:lambda:us-east-1:673842895830:function:web_test_3",
+        "arn:aws:lambda:us-east-1:673842895830:function:WeatherApi",
+        "arn:aws:lambda:us-east-1:673842895830:function:admin-panel"
+      ]
+    },
+    {
+      "Sid": "CloudFrontInvalidation",
+      "Effect": "Allow",
+      "Action": "cloudfront:CreateInvalidation",
+      "Resource": "arn:aws:cloudfront::673842895830:distribution/E2TUI9GEVJDFSQ"
+    },
+    {
+      "Sid": "S3StaticSiteDeploy",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::weather-site-static",
+        "arn:aws:s3:::weather-site-static/*"
+      ]
+    }
+  ]
+}

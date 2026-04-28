@@ -91,28 +91,25 @@ S3 static site. No AWS credentials stored in GitHub.
 
 ### AWS IAM OIDC for GitHub Actions
 
-- [ ] **Create OIDC Identity Provider** in AWS IAM
+- [x] **Create OIDC Identity Provider** in AWS IAM
   - Provider URL: `https://token.actions.githubusercontent.com`
   - Audience: `sts.amazonaws.com`
+  - ARN: `arn:aws:iam::673842895830:oidc-provider/token.actions.githubusercontent.com`
 
-- [ ] **Create IAM Role** `github-actions-weather-deploy`
-  - Trust policy: allow your specific GitHub repo to assume this role
-  - Permissions needed:
-    - `lambda:UpdateFunctionCode` on your Lambda ARNs
-    - `s3:PutObject`, `s3:DeleteObject` on the static site bucket (Phase 4)
-    - `cloudfront:CreateInvalidation` on distribution `E2TUI9GEVJDFSQ`
-    - `secretsmanager:GetSecretValue` (Phase 5, add later)
-
-- [ ] **Note the Role ARN** — needed in GitHub Actions workflows
+- [x] **Create IAM Role** `github-actions-weather-deploy`
+  - Trust policy: allows `repo:redleader1/weather-project:*` to assume role
+  - Permissions policy: `github-actions-weather-deploy` (v1) — Lambda deploy, S3, CF invalidation
+  - Role ARN: `arn:aws:iam::673842895830:role/github-actions-weather-deploy`
 
 ### GitHub Actions Workflows
 
-- [ ] **Lambda deploy workflow** (`.github/workflows/deploy-lambda.yml`)
+- [x] **Lambda deploy workflow** (`.github/workflows/deploy-lambda.yml`)
   - Trigger: push to `main` that changes files in `aws/lambda/`
-  - Steps: configure AWS credentials (OIDC) → zip Lambda → update function code → CF invalidation
-  - Separate job per Lambda (weather-website, node1-api-gateway, admin-panel)
+  - Uses `dorny/paths-filter` to detect which Lambda changed; separate job per Lambda
+  - weather-website → `web_test_3`, node1-api-gateway → `WeatherApi`, admin-panel → `admin-panel`
+  - weather-website and admin-panel jobs invalidate their respective CF paths after deploy
 
-- [ ] **S3 static site workflow** (`.github/workflows/deploy-site.yml`) — Phase 4
+- [x] **S3 static site workflow** (`.github/workflows/deploy-site.yml`) — ready for Phase 4
   - Trigger: push to `main` that changes files in `site/`
   - Steps: configure AWS credentials → sync to S3 → CF invalidation
 
