@@ -1,6 +1,9 @@
 {
   "CallerReference": "30a9c455-07ae-47ea-5996-442b446e6136",
-  "Aliases": { "Quantity": 0 },
+  "Aliases": {
+    "Quantity": 2,
+    "Items": ["bigredsweather.com", "www.bigredsweather.com"]
+  },
   "DefaultRootObject": "index.html",
   "Origins": {
     "Quantity": 3,
@@ -142,10 +145,10 @@
   "PriceClass": "PriceClass_All",
   "Enabled": true,
   "ViewerCertificate": {
-    "CloudFrontDefaultCertificate": true,
-    "SSLSupportMethod": "vip",
-    "MinimumProtocolVersion": "TLSv1",
-    "CertificateSource": "cloudfront"
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:673842895830:certificate/623d66d6-9114-4531-a4f9-3a7f92463ae8",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021",
+    "CertificateSource": "acm"
   },
   "Restrictions": {
     "GeoRestriction": {

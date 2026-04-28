@@ -1,0 +1,27 @@
+{
+  "Comment": "ACM certificate DNS validation for bigredsweather.com",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_f9be5b76aea39292cbf953a3fa5cb75a.bigredsweather.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          { "Value": "_160e6c24068d8cb2461e636f1ec4b095.jkddzztszm.acm-validations.aws." }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_e5ebdb1ecdbd7cafb950d7df1d3eeb03.www.bigredsweather.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          { "Value": "_e11f5ceabf3c783da1f7588a40b5a066.jkddzztszm.acm-validations.aws." }
+        ]
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 This document captures every planned task discussed. Work through phases in order —
 each phase unblocks the next. Check boxes off as tasks are completed.
 
-Last updated: 2026-04-25
+Last updated: 2026-04-28
 
 ---
 
@@ -181,55 +181,74 @@ instead of HTML. HTML rendering moves to the browser (Phase 4).
 - [x] **Create Lambda function URL** for admin Lambda
   - URL: `https://7rjw3uf5ebgoxlx3qoo6oekekm0rcbjm.lambda-url.us-east-1.on.aws/`
 
-- [ ] **Wire into CloudFront** as `/admin` origin (Phase 4)
+- [x] **Wire into CloudFront** as `/admin` origin — done as part of Phase 4 distribution update
 
 ---
 
-## Phase 4 — S3 Static Website
+## Phase 4 — S3 Static Website ✅
 
 Goal: Move all HTML/CSS/JS into a static S3 site served by CloudFront. Browser
 JavaScript fetches data from the Lambda JSON API. Design updates become S3 uploads.
 
 ### S3 Setup
 
-- [ ] **Create S3 bucket** `weather-site-static` (or similar) in us-east-1
-- [ ] **Disable public access** — CloudFront will be the only reader (use OAC)
-- [ ] **Create CloudFront Origin Access Control (OAC)** for the S3 bucket
-- [ ] **Update CloudFront distribution** origins and behaviors:
+- [x] **Create S3 bucket** `weather-site-static` in us-east-1
+- [x] **Disable public access** — CloudFront is the only reader via OAC
+- [x] **Create CloudFront Origin Access Control (OAC)** — ID: `E3DHKP1DVBOZME`
+- [x] **Update CloudFront distribution** origins and behaviors:
   - Default (`/`) → S3 bucket (static site)
-  - `/api/*` → weather Lambda URL
-  - `/admin/*` → admin Lambda URL
-- [ ] **Update Lambda CORS** to allow the CloudFront domain
+  - `/api/*` → WeatherApiOrigin (weather Lambda)
+  - `/admin/*` → AdminPanelOrigin (admin Lambda)
+  - Custom error: 403 → index.html / 200 (handles missing S3 keys)
+- [x] **Lambda CORS** — already configured with CloudFront domain
 
 ### Static Site — `site/` Folder
 
-- [ ] **Create `site/` folder** in project root (this goes in GitHub)
-  ```
-  site/
-  ├── index.html
-  ├── admin.html
-  ├── css/
-  │   └── styles.css
-  └── js/
-      └── weather.js
-  ```
+- [x] **`site/index.html`** — weather dashboard
+- [x] **`site/css/styles.css`** — custom styles on top of Bootstrap 5
+- [x] **`site/js/weather.js`** — fetches `/api/` and `/admin/` in parallel, renders cards
 
-- [ ] **`weather.js`** — fetches `/api` on load and every 60 seconds, renders data into DOM
-- [ ] **`index.html`** — weather dashboard UI (see Phase 4 design tasks below)
-- [ ] **`admin.html`** — node health UI
+### Website Features Delivered
 
-### Website Design
+- [x] **Bootstrap 5** CDN
+- [x] **Current conditions card** per node: temp (°F + °C), humidity, pressure, CO₂ (if available), lux (if available)
+- [x] **High / low today** — temp, pressure, CO₂ ranges per node
+- [x] **"Last updated" timestamp** per node (minutes ago + exact Eastern timestamp)
+- [x] **NWS weather alerts** — fetched from `https://api.weather.gov/alerts/active?zone=NYZ072`
+  — update `NWS_ZONE` in `weather.js` for your area
+- [x] **60-second auto-refresh** with countdown timer in footer
+- [x] **Responsive layout** — Bootstrap grid, mobile-friendly
+- [x] **Node status indicator** — ok / warning / offline badge per card; offline cards dimmed
 
-- [ ] **Bootstrap 5** (upgrade from 4.3.1)
-- [ ] **Weather icons** — inline SVG set (no external dependencies)
-- [ ] **Current conditions card** per node: temp, humidity, pressure, CO2 (if available), lux (if available)
-- [ ] **High / low today** — now works once field casing bug is fixed
-- [ ] **"Last updated" timestamp** per node with Eastern timezone
-- [ ] **NWS weather alerts** — fetch from `https://api.weather.gov/alerts/active?zone=NYZ072`
-  (update zone code for your area — free, no API key required)
-- [ ] **60-second auto-refresh** of data (no page reload — just re-fetch JSON)
-- [ ] **Responsive layout** — works on phone and desktop
-- [ ] **Node status indicator** — subtle visual if a node hasn't reported recently
+---
+
+## Phase 4.5 — Custom Domain (bigredsweather.com)
+
+Goal: Serve the weather dashboard at `bigredsweather.com` (and `www.bigredsweather.com`)
+instead of the default CloudFront domain. Domain already registered in Route 53.
+
+- [ ] **Request an SSL/TLS certificate** in AWS Certificate Manager (ACM)
+  - Must be requested in **us-east-1** — CloudFront only accepts ACM certs from us-east-1
+  - Request for both `bigredsweather.com` and `www.bigredsweather.com`
+  - Use DNS validation (Route 53 can add the validation records automatically)
+
+- [ ] **Wait for certificate to be issued** (usually 2–5 minutes with DNS validation)
+
+- [ ] **Add the domain as a CloudFront alias**
+  - Update distribution to add `bigredsweather.com` and `www.bigredsweather.com` as CNAMEs
+  - Attach the ACM certificate to the distribution
+  - Update `MinimumProtocolVersion` to `TLSv1.2_2021`
+
+- [ ] **Create Route 53 DNS records**
+  - `bigredsweather.com` → A record (Alias) → CloudFront distribution
+  - `www.bigredsweather.com` → A record (Alias) → CloudFront distribution
+
+- [ ] **Update CORS_ORIGIN env var** on both Lambdas
+  - Add `https://bigredsweather.com` (or update to match new domain)
+  - Redeploy both Lambdas
+
+- [ ] **Update `NWS_ZONE`** in `site/js/weather.js` to the correct zone for your location
+  - Find your zone at `https://alerts.weather.gov/`
 
 ---
 
