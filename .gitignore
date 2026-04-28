@@ -1,0 +1,36 @@
+# ── Credentials — never commit these ──────────────────────────────────────────
+*.pem
+*.key
+*.crt
+
+# ── Python ────────────────────────────────────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+
+# ── Build artifacts ───────────────────────────────────────────────────────────
+*.zip
+*.pkg
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+cron_*.log
+
+# ── Environment files ─────────────────────────────────────────────────────────
+.env
+.env.*
+
+# ── Archive folder — old scripts, not useful in git ───────────────────────────
+archive/
+
+# ── Misc project clutter ──────────────────────────────────────────────────────
+claude/
+Downloads.code-workspace
+weatherproject.code-workspace
+AWSCLIV2.pkg

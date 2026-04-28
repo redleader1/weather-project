@@ -1,0 +1,16 @@
+{
+  "sql": "SELECT * FROM 'weather/+/telemetry'",
+  "description": "",
+  "actions": [
+    {
+      "dynamoDBv2": {
+        "roleArn": "arn:aws:iam::673842895830:role/service-role/AWS_IOT_Publish_DynamoDB",
+        "putItem": {
+          "tableName": "weather-data"
+        }
+      }
+    }
+  ],
+  "ruleDisabled": false,
+  "awsIotSqlVersion": "2016-03-23"
+}
