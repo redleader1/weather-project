@@ -52,41 +52,10 @@ S3 static site. No AWS credentials stored in GitHub.
 
 ### GitHub Repository
 
-- [ ] **Initialize git** in the `weather-project/` folder
-  ```bash
-  git init
-  git branch -M main
-  ```
-
-- [ ] **Create `.gitignore`** — must exclude:
-  ```
-  # Credentials — never commit
-  *.pem
-  *.key
-  *.crt
-
-  # Python
-  .venv/
-  venv/
-  __pycache__/
-  *.pyc
-
-  # macOS
-  .DS_Store
-
-  # Build artifacts
-  *.zip
-  *.pkg
-
-  # Archive folder — large, not useful in git
-  archive/
-
-  # IDE
-  *.code-workspace
-  ```
-
-- [ ] **Create GitHub repository** (private recommended)
-- [ ] **Initial commit and push**
+- [x] **Initialize git** in the `weather-project/` folder
+- [x] **Create `.gitignore`** — excludes certs, pycache, .DS_Store, archive/, build artifacts
+- [x] **Create GitHub repository** (`redleader1/weather-project`, private)
+- [x] **Initial commit and push**
 - [ ] **Protect `main` branch** — require PR or direct push only from your account
 
 ### AWS IAM OIDC for GitHub Actions
@@ -113,9 +82,8 @@ S3 static site. No AWS credentials stored in GitHub.
   - Trigger: push to `main` that changes files in `site/`
   - Steps: configure AWS credentials → sync to S3 → CF invalidation
 
-- [ ] **Test Lambda deploy end-to-end**
-  - Make a small change to `aws/lambda/weather-website/lambda_function.py`
-  - Push to `main`, watch Actions tab, verify Lambda updated in AWS
+- [x] **Test Lambda deploy end-to-end**
+  - Multiple Lambda changes pushed and auto-deployed via GitHub Actions ✅
 
 ### Pi Auto-Update via Git Pull
 
@@ -222,58 +190,64 @@ JavaScript fetches data from the Lambda JSON API. Design updates become S3 uploa
 
 ---
 
-## Phase 4.5 — Custom Domain (bigredsweather.com)
+## Phase 4.5 — Custom Domain (bigredsweather.com) ✅
 
 Goal: Serve the weather dashboard at `bigredsweather.com` (and `www.bigredsweather.com`)
 instead of the default CloudFront domain. Domain already registered in Route 53.
 
-- [ ] **Request an SSL/TLS certificate** in AWS Certificate Manager (ACM)
-  - Must be requested in **us-east-1** — CloudFront only accepts ACM certs from us-east-1
-  - Request for both `bigredsweather.com` and `www.bigredsweather.com`
-  - Use DNS validation (Route 53 can add the validation records automatically)
+- [x] **Request an SSL/TLS certificate** in AWS Certificate Manager (ACM)
+  - Requested in us-east-1 for `bigredsweather.com` and `www.bigredsweather.com`
+  - ACM cert ARN: `arn:aws:acm:us-east-1:673842895830:certificate/623d66d6-9114-4531-a4f9-3a7f92463ae8`
 
-- [ ] **Wait for certificate to be issued** (usually 2–5 minutes with DNS validation)
+- [x] **Fix Route 53 nameserver mismatch**
+  - Hosted zone nameservers (ns-1882, ns-142, ns-958, ns-1335) didn't match domain registration
+  - Fixed via `aws route53domains update-domain-nameservers` — cert issued minutes after
 
-- [ ] **Add the domain as a CloudFront alias**
-  - Update distribution to add `bigredsweather.com` and `www.bigredsweather.com` as CNAMEs
-  - Attach the ACM certificate to the distribution
-  - Update `MinimumProtocolVersion` to `TLSv1.2_2021`
+- [x] **Add the domain as a CloudFront alias**
+  - Updated distribution with `bigredsweather.com` and `www.bigredsweather.com` as CNAMEs
+  - Attached ACM certificate; TLSv1.2_2021, sni-only
 
-- [ ] **Create Route 53 DNS records**
-  - `bigredsweather.com` → A record (Alias) → CloudFront distribution
-  - `www.bigredsweather.com` → A record (Alias) → CloudFront distribution
+- [x] **Create Route 53 DNS records**
+  - `bigredsweather.com` → A Alias → `d33w9ue2h7llgj.cloudfront.net`
+  - `www.bigredsweather.com` → A Alias → `d33w9ue2h7llgj.cloudfront.net`
 
-- [ ] **Update CORS_ORIGIN env var** on both Lambdas
-  - Add `https://bigredsweather.com` (or update to match new domain)
-  - Redeploy both Lambdas
+- [x] **Update CORS_ORIGIN env var** on both Lambdas to `https://bigredsweather.com`
 
-- [ ] **Update `NWS_ZONE`** in `site/js/weather.js` to the correct zone for your location
+- [ ] **Update `NWS_ZONE`** to the correct zone for your location
   - Find your zone at `https://alerts.weather.gov/`
+  - Currently using `NYZ072` as placeholder; stored in Secrets Manager `weather/api-keys`
 
 ---
 
-## Phase 5 — Secrets Manager
+## Phase 5 — Secrets Manager ✅
 
 Goal: Learn the Secrets Manager pattern by integrating it into the Lambda functions.
 Pis are excluded — their auth is handled by IoT Core certificates.
 
-- [ ] **Create a placeholder secret** in Secrets Manager (e.g. `weather/api-keys`)
-  - Even if empty now, establishes the pattern
-  - Use SecretString with JSON: `{"nws_zone": "NYZ072"}` (config, not really secret, but good practice)
+- [x] **Create secret `weather/api-keys`** in Secrets Manager
+  - ARN: `arn:aws:secretsmanager:us-east-1:673842895830:secret:weather/api-keys-FBc9yq`
+  - Content: `{"nws_zone": "NYZ072"}` — NWS zone served to the frontend dynamically
 
-- [ ] **Update Lambda IAM roles** with `secretsmanager:GetSecretValue` on the secret ARN
+- [x] **Create and attach IAM policy** `lambda-weather-secrets`
+  - Allows `secretsmanager:GetSecretValue` on the secret ARN
+  - Attached to Lambda execution role `web_test_3-role-jadlm83n`
 
-- [ ] **Update Lambda code** to fetch the secret at cold start
-  ```python
-  import boto3, json
-  sm = boto3.client('secretsmanager', region_name='us-east-1')
-  secret = json.loads(sm.get_secret_value(SecretId='weather/api-keys')['SecretString'])
-  ```
+- [x] **Update weather Lambda** to fetch secret at cold start
+  - `_load_secrets()` runs at module level — cached for Lambda container lifetime
+  - `NWS_ZONE` sourced from secret; falls back to `NYZ072` if Secrets Manager unreachable
+  - `nws_zone` included in every API response so the frontend never hardcodes it
 
-- [ ] **Document the pattern** — when a real API key is needed (e.g. paid weather service),
-  add it here rather than in environment variables
+- [x] **Update `weather.js`** to read `nws_zone` from API response
+  - `fetchAlerts(weather.nws_zone || 'NYZ072')` — no hardcoded zone in frontend
 
-- [ ] **Update GitHub Actions IAM role** with secretsmanager permissions if needed for deploy
+- [x] **Update Lambda env vars** — `SECRET_NAME=weather/api-keys` on `web_test_3`
+
+- [ ] **Update `NWS_ZONE`** to the correct zone for your location
+  - Find your zone at `https://alerts.weather.gov/`
+  - Update the secret value: `aws secretsmanager update-secret --secret-id weather/api-keys --secret-string '{"nws_zone": "YOUR_ZONE"}'`
+  - No Lambda redeploy needed — takes effect on next cold start
+
+- [x] **Pattern documented** — future API keys (e.g. paid weather service) go in this secret
 
 ---
 
@@ -284,39 +258,31 @@ Shared Python utilities reduce copy-paste between node collectors.
 
 ### Shared Python Utilities
 
-- [ ] **`nodes/shared/payload.py`**
-  - `now_keys_eastern()` → `(eventDateDay, eventTimestamp)`
-  - `ttl_14_days_epoch()` → int
-  - `build_payload(node_id, readings)` → full standard dict with defaults for lux/co2
-  - `c_to_f(c)` → float
+- [x] **`nodes/shared/payload.py`**
+  - `c_to_f(c)`, `now_keys_eastern()`, `ttl_14_days_epoch()`, `build_payload(node_id, readings)`
+  - Handles lux (float, rounded to 2dp), co2 (int ppm), defaults for missing sensors
 
-- [ ] **`nodes/shared/aws_iot.py`**
-  - `connect_mqtt(node_id, cert_dir, endpoint)` → connected `mqtt_connection`
-  - Encapsulates all the `mtls_from_path` boilerplate
+- [x] **`nodes/shared/aws_iot.py`**
+  - `connect_mqtt(node_id, cert_dir, endpoint, client_id)` → connected `mqtt_connection`
+  - `publish(mqtt_connection, node_id, payload)` — publishes to `weather/{node_id}/telemetry`
+  - `disconnect_mqtt(mqtt_connection)` — clean disconnect
 
-- [ ] **Update `nodes/node-02-garden/collector.py`** to use shared utilities
-- [ ] **Update `nodes/node-03-outside-home/collector.py`** to use shared utilities
-- [ ] **Test both nodes still publish correctly** after refactor
+- [x] **Update `nodes/node-02-garden/collector.py`** to use shared utilities
+- [x] **Update `nodes/node-03-outside-home/collector.py`** to use shared utilities
+- [ ] **Test both nodes still publish correctly** after refactor (deploy via git push, verify in DynamoDB)
 
 ### Provisioning Scripts
 
-- [ ] **`provisioning/provision-iot.sh`**
-  - Takes `NODE_ID` as argument
-  - Creates IoT Thing in AWS IoT Core
-  - Creates and downloads certificate + private key
-  - Creates and attaches IoT policy
-  - Outputs cert files ready to copy to Pi
+- [x] **`provisioning/provision-iot.sh`**
+  - Args: `NODE_ID`
+  - Creates IoT Thing, certificate + key pair, attaches `weather-node-policy`
+  - Writes cert files to `certs/` (gitignored)
 
-- [ ] **`provisioning/setup-pi.sh`**
-  - Takes `NODE_ID` and sensor type as arguments
-  - Installs Python dependencies (`awsiotsdk`, `adafruit-*` libs)
-  - Creates Python venv at `/home/weather/weather-station/`
-  - Clones GitHub repo
-  - Copies appropriate `collector.py` and `run.sh` for the node
-  - Adds cron entry for `run.sh`
-  - Adds cron entry for git-pull update script
+- [x] **`provisioning/setup-pi.sh`**
+  - Args: `NODE_ID`, `PI_IP`, optional `PI_USER` (default: `weather`)
+  - SSHes into Pi: installs deps, creates venv, clones repo, adds cron entries
 
-- [ ] **`provisioning/README.md`** — step-by-step instructions for provisioning a new node end-to-end
+- [x] **`provisioning/README.md`** — 9-step end-to-end guide for provisioning a new node
 
 ---
 
