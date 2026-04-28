@@ -1,9 +1,9 @@
 /* ── Config ────────────────────────────────────────────────────────── */
 const API_URL    = '/api/';
 const ADMIN_URL  = '/admin/';
-const NWS_ZONE   = 'NYZ072';   // Update to your county/zone code — find yours at
-                                // https://alerts.weather.gov/
 const REFRESH_MS = 60000;      // 60-second auto-refresh
+// NWS_ZONE is no longer hardcoded here — it's stored in AWS Secrets Manager
+// (weather/api-keys) and returned by the API in each response as `nws_zone`.
 
 // Human-readable names for each nodeId
 const NODE_NAMES = {
@@ -25,9 +25,9 @@ async function fetchAdmin() {
   return res.json();
 }
 
-async function fetchAlerts() {
+async function fetchAlerts(nwsZone) {
   try {
-    const res  = await fetch(`https://api.weather.gov/alerts/active?zone=${NWS_ZONE}`);
+    const res  = await fetch(`https://api.weather.gov/alerts/active?zone=${nwsZone}`);
     const data = await res.json();
     return data.features || [];
   } catch {
@@ -163,11 +163,11 @@ function renderCards(weather, admin) {
 /* ── Refresh cycle ─────────────────────────────────────────────────── */
 async function refresh() {
   try {
-    const [weather, admin, alerts] = await Promise.all([
+    const [weather, admin] = await Promise.all([
       fetchWeather(),
       fetchAdmin(),
-      fetchAlerts(),
     ]);
+    const alerts = await fetchAlerts(weather.nws_zone || 'NYZ072');
 
     renderCards(weather, admin);
     renderAlerts(alerts);

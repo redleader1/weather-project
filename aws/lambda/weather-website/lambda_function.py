@@ -11,13 +11,31 @@ from zoneinfo import ZoneInfo
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-TABLE_NAME  = os.environ.get('TABLE_NAME',  'weather-data')
-CORS_ORIGIN = os.environ.get('CORS_ORIGIN', 'https://d33w9ue2h7llgj.cloudfront.net')
+TABLE_NAME   = os.environ.get('TABLE_NAME',   'weather-data')
+CORS_ORIGIN  = os.environ.get('CORS_ORIGIN',  'https://bigredsweather.com')
+SECRET_NAME  = os.environ.get('SECRET_NAME',  'weather/api-keys')
 
 dynamodb = boto3.resource('dynamodb')
 table    = dynamodb.Table(TABLE_NAME)
 
 EASTERN = ZoneInfo("America/New_York")
+
+# ── Secrets Manager — loaded once at cold start ─────────────────────
+# Fetching outside the handler means the secret is cached for the
+# lifetime of the Lambda container (typically minutes to hours).
+# To rotate a value, update the secret in AWS — the next cold start
+# picks it up automatically. No redeploy needed.
+def _load_secrets():
+    try:
+        sm  = boto3.client('secretsmanager', region_name='us-east-1')
+        raw = sm.get_secret_value(SecretId=SECRET_NAME)['SecretString']
+        return json.loads(raw)
+    except Exception as e:
+        logger.warning(f"Could not load secrets ({e}) — using defaults")
+        return {}
+
+_secrets = _load_secrets()
+NWS_ZONE = _secrets.get('nws_zone', 'NYZ072')
 
 # Sensor fields to include in the API response (strips DynamoDB internals
 # like 14DayTTL, eventDateDay, nodeId which appears at the parent level).
@@ -116,9 +134,10 @@ def get_daily_data():
         })
 
     return {
-        'nodes': nodes,
-        'date':  current_day,
-        'asOf':  datetime.now(EASTERN).strftime('%Y-%m-%d %I:%M %p ET'),
+        'nodes':    nodes,
+        'date':     current_day,
+        'asOf':     datetime.now(EASTERN).strftime('%Y-%m-%d %I:%M %p ET'),
+        'nws_zone': NWS_ZONE,
     }
 
 
