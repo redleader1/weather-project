@@ -166,14 +166,21 @@ instead of HTML. HTML rendering moves to the browser (Phase 4).
 
 ### Admin Panel Lambda
 
-- [ ] **Create `aws/lambda/admin-panel/lambda_function.py`**
-  - Query DynamoDB for most recent record per `nodeId`
-  - Compute minutes since last report for each node
-  - Return JSON: node name, last seen timestamp, minutes ago, status (ok / warning / offline)
+- [x] **Create `aws/lambda/admin-panel/lambda_function.py`**
+  - Queries most recent record per nodeId (reverse-sorted query, Limit=1)
+  - Computes minutes since last report in Eastern time
+  - Returns JSON: nodeId, lastSeen, minutesAgo, status (ok / warning / offline)
   - Thresholds: >90 min = warning, >180 min = offline
+  - NODE_IDS configurable via env var for easy Node 4 addition
 
-- [ ] **Deploy admin Lambda to AWS**
-- [ ] **Create Lambda function URL** for admin Lambda
+- [x] **Deploy admin Lambda to AWS**
+  - Function ARN: `arn:aws:lambda:us-east-1:673842895830:function:admin-panel`
+  - Execution role: `web_test_3-role-jadlm83n` (shared — has DynamoDB read access)
+  - Env vars: `TABLE_NAME=weather-data`, `NODE_IDS=garden-01,outside-01,outside-home`
+
+- [x] **Create Lambda function URL** for admin Lambda
+  - URL: `https://7rjw3uf5ebgoxlx3qoo6oekekm0rcbjm.lambda-url.us-east-1.on.aws/`
+
 - [ ] **Wire into CloudFront** as `/admin` origin (Phase 4)
 
 ---

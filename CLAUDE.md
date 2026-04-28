@@ -68,10 +68,9 @@ These decisions were made deliberately — do not revisit without good reason.
 | Service | URL |
 |---------|-----|
 | CloudFront (public) | `https://d33w9ue2h7llgj.cloudfront.net` |
-| Lambda function URL (direct, current) | `https://4pwj6hzjxonvxr4dsf4xqzodsi0aqivd.lambda-url.us-east-1.on.aws` |
+| weather-api Lambda URL (direct) | `https://4pwj6hzjxonvxr4dsf4xqzodsi0aqivd.lambda-url.us-east-1.on.aws` |
+| admin-panel Lambda URL (direct) | `https://7rjw3uf5ebgoxlx3qoo6oekekm0rcbjm.lambda-url.us-east-1.on.aws/` |
 | CloudFront Distribution ID | `E2TUI9GEVJDFSQ` |
-| AWS Account ID | `673842895830` |
-| IAM User (local CLI) | `eriks_mac` |
 | AWS Account ID | `673842895830` |
 | IAM User (local CLI) | `eriks_mac` |
 
