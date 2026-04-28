@@ -1,0 +1,39 @@
+name: Deploy Static Site
+
+# Phase 4 — triggers when anything under site/ changes.
+# The S3 bucket (weather-site-static) and CloudFront origin wiring
+# will be set up in Phase 4. This workflow is ready to go once that's done.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+
+# Required for OIDC token exchange with AWS
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::673842895830:role/github-actions-weather-deploy
+          aws-region: us-east-1
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync site/ s3://weather-site-static/ \
+            --delete \
+            --exclude ".DS_Store"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E2TUI9GEVJDFSQ \
+            --paths "/*"

@@ -1,0 +1,124 @@
+name: Deploy Lambda Functions
+
+# Triggers on any push to main that touches files under aws/lambda/
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'aws/lambda/**'
+
+# Required for OIDC token exchange with AWS
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+
+  # ── Detect which Lambda folders changed ────────────────────────────────────
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      weather-website:    ${{ steps.filter.outputs.weather-website }}
+      node1-api-gateway:  ${{ steps.filter.outputs.node1-api-gateway }}
+      admin-panel:        ${{ steps.filter.outputs.admin-panel }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            weather-website:
+              - 'aws/lambda/weather-website/**'
+            node1-api-gateway:
+              - 'aws/lambda/node1-api-gateway/**'
+            admin-panel:
+              - 'aws/lambda/admin-panel/**'
+
+  # ── weather-website → AWS function: web_test_3 ─────────────────────────────
+  deploy-weather-website:
+    needs: changes
+    if: needs.changes.outputs.weather-website == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::673842895830:role/github-actions-weather-deploy
+          aws-region: us-east-1
+
+      - name: Package Lambda
+        run: |
+          cd aws/lambda/weather-website
+          zip function.zip lambda_function.py
+
+      - name: Deploy to AWS
+        run: |
+          aws lambda update-function-code \
+            --function-name web_test_3 \
+            --zip-file fileb://aws/lambda/weather-website/function.zip
+
+      - name: Invalidate CloudFront cache (/api)
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E2TUI9GEVJDFSQ \
+            --paths "/api/*"
+
+  # ── node1-api-gateway → AWS function: WeatherApi ───────────────────────────
+  #    Node 1 ingestion path — deploy with extra care
+  deploy-node1-api-gateway:
+    needs: changes
+    if: needs.changes.outputs.node1-api-gateway == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::673842895830:role/github-actions-weather-deploy
+          aws-region: us-east-1
+
+      - name: Package Lambda
+        run: |
+          cd aws/lambda/node1-api-gateway
+          zip function.zip lambda_function.py
+
+      - name: Deploy to AWS
+        run: |
+          aws lambda update-function-code \
+            --function-name WeatherApi \
+            --zip-file fileb://aws/lambda/node1-api-gateway/function.zip
+
+  # ── admin-panel → AWS function: admin-panel ────────────────────────────────
+  #    Phase 3 — not yet built; job will only run once the folder has content
+  deploy-admin-panel:
+    needs: changes
+    if: needs.changes.outputs.admin-panel == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::673842895830:role/github-actions-weather-deploy
+          aws-region: us-east-1
+
+      - name: Package Lambda
+        run: |
+          cd aws/lambda/admin-panel
+          zip function.zip lambda_function.py
+
+      - name: Deploy to AWS
+        run: |
+          aws lambda update-function-code \
+            --function-name admin-panel \
+            --zip-file fileb://aws/lambda/admin-panel/function.zip
+
+      - name: Invalidate CloudFront cache (/admin)
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E2TUI9GEVJDFSQ \
+            --paths "/admin/*"
