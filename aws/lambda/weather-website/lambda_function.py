@@ -10,7 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Load the DynamoDB table name from environment variables
-TABLE_NAME = os.environ.get('TABLE_NAME', 'Weather-Data_V10')
+TABLE_NAME = os.environ.get('TABLE_NAME', 'weather-data')
 
 # Initialize the DynamoDB client
 dynamodb = boto3.resource('dynamodb')
