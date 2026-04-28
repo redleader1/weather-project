@@ -142,37 +142,25 @@ instead of HTML. HTML rendering moves to the browser (Phase 4).
 
 ### Bug Fixes
 
-- [ ] **Fix timezone bug**
-  - Replace `datetime.now()` with `datetime.now(ZoneInfo("America/New_York"))`
-  - Affects `get_daily_records()` — wrong day queried after ~7–8pm Eastern currently
+- [x] **Fix timezone bug**
+  - `datetime.now(EASTERN)` with `ZoneInfo("America/New_York")` — deployed
 
-- [ ] **Fix field casing bug**
-  - Update min/max stats loop from `['TempF', 'Pressure', 'CO2']`
-    to `['tempF', 'pressure', 'co2']`
-  - This unblocks high/low display which has been broken since field casing was standardized
+- [x] **Fix field casing bug**
+  - Stats loop updated to `['tempF', 'pressure', 'co2']` — high/low now populating
 
-- [ ] **Fix DynamoDB pagination**
-  - Wrap `table.query()` in a loop that follows `LastEvaluatedKey`
-  - Without this, days with many records (all nodes, every minute) silently truncate at 1 MB
+- [x] **Fix DynamoDB pagination**
+  - `LastEvaluatedKey` loop in place — no more silent truncation
 
 ### Weather Lambda → JSON API
 
-- [ ] **Refactor `lambda_handler`** to return JSON response instead of HTML
-  ```json
-  {
-    "nodes": [
-      {
-        "nodeId": "outside-home",
-        "latest": { ...most recent record... },
-        "today": { "maxTempF": 72.5, "minTempF": 58.2, ... }
-      }
-    ],
-    "asOf": "2025-01-15 14:30 ET"
-  }
-  ```
+- [x] **Refactor `lambda_handler`** to return JSON response instead of HTML
+  - Response shape: `{ nodes: [{nodeId, latest, today}], date, asOf }`
+  - `latest` contains clean sensor fields only (strips DynamoDB internals)
+  - Node 1 legacy `TempF` key normalised to `tempF` in output
+  - DynamoDB `Decimal` types handled via custom `serialize()` function
 
-- [ ] **Add CORS header** to Lambda response so browser JS can call it
-  - `Access-Control-Allow-Origin: https://d33w9ue2h7llgj.cloudfront.net`
+- [x] **Add CORS header** to Lambda response so browser JS can call it
+  - `Access-Control-Allow-Origin` driven by `CORS_ORIGIN` env var (default: CloudFront domain)
 
 - [ ] **Update Lambda function name/description** in AWS to reflect new purpose
 
