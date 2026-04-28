@@ -1,0 +1,143 @@
+/* ── Base ──────────────────────────────────────────────────────────── */
+body {
+  background-color: #f0f4f8;
+  color: #1a202c;
+}
+
+/* ── Navbar ────────────────────────────────────────────────────────── */
+.navbar {
+  border-bottom: 1px solid #2d3748;
+}
+.brand-icon {
+  font-size: 1.2rem;
+  margin-right: 0.25rem;
+}
+
+/* ── Weather card ──────────────────────────────────────────────────── */
+.weather-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s ease;
+}
+.weather-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+.weather-card .card-header {
+  background-color: #2d3748;
+  color: #fff;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 0.75rem 1rem;
+}
+.weather-card .card-footer {
+  background-color: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 12px 12px !important;
+  font-size: 0.78rem;
+  color: #718096;
+}
+
+/* ── Node name ─────────────────────────────────────────────────────── */
+.node-name {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+.status-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.3em 0.65em;
+  border-radius: 20px;
+}
+
+/* ── Temperature display ───────────────────────────────────────────── */
+.temp-display {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+.temp-f {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1;
+}
+.temp-c {
+  font-size: 1rem;
+  color: #718096;
+  margin-left: 0.4rem;
+}
+
+/* ── Readings table ────────────────────────────────────────────────── */
+.readings {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+}
+.reading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+}
+.reading-label {
+  color: #718096;
+}
+.reading-value {
+  font-weight: 600;
+  color: #2d3748;
+}
+.unit {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #a0aec0;
+}
+
+/* ── Daily range section ───────────────────────────────────────────── */
+.range-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a0aec0;
+  margin-bottom: 0.35rem;
+}
+.range-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.82rem;
+  padding: 0.15rem 0;
+}
+.range-label {
+  color: #a0aec0;
+}
+.range-value {
+  color: #4a5568;
+}
+
+/* ── NWS Alert banner ──────────────────────────────────────────────── */
+#alerts-container .alert {
+  border-radius: 8px;
+  border-left: 4px solid #f6ad55;
+}
+
+/* ── Footer bar ────────────────────────────────────────────────────── */
+.footer-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0 2rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+/* ── Offline card dim ──────────────────────────────────────────────── */
+.weather-card.node-offline {
+  opacity: 0.65;
+}
+
+/* ── Responsive tweaks ─────────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .temp-f { font-size: 2.2rem; }
+  .footer-bar { flex-direction: column; gap: 0.25rem; }
+}
