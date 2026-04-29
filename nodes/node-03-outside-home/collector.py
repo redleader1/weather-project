@@ -13,7 +13,7 @@ from payload import build_payload
 from aws_iot import connect_mqtt, publish, disconnect_mqtt
 
 import board
-import adafruit_bme280
+from adafruit_bme280 import basic as adafruit_bme280
 
 # ── Config ────────────────────────────────────────────────────────────────────
 NODE_ID  = "outside-home"
