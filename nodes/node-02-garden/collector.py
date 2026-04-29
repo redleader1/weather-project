@@ -9,7 +9,7 @@ import os
 import socket
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'shared'))
 from payload import build_payload
 from aws_iot import connect_mqtt, publish, disconnect_mqtt
 
